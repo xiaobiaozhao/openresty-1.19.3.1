@@ -10,17 +10,10 @@ static ngx_http_lua_fork_signal_t ngx_signals[] = {
     { 0, NULL }
 };
 
-int ngx_http_lua_fork_api()
-{
-    int i = 52;
-    return i + 110;
-}
-
 int ngx_http_lua_fork(char* name)
 {
     ngx_pid_t pid;
     ngx_uint_t i;
-    ngx_listening_t* ls;
     struct sigaction sa;
     ngx_http_lua_fork_signal_t* sig;
     sigset_t set;
@@ -91,8 +84,13 @@ int ngx_http_lua_fork(char* name)
         }
 
         /* close listening socket fd */
+
+        ngx_listening_t* ls;
         ls = ngx_cycle->listening.elts;
         for (i = 0; i < ngx_cycle->listening.nelts; i++) {
+            ngx_log_error(NGX_LOG_EMERG, ngx_cycle->log, ngx_socket_errno,
+                "listen addr %V ",
+                &ls[i].addr_text);
             if (ngx_close_socket(ls[i].fd) == -1 || 1) {
                 ngx_log_error(NGX_LOG_EMERG, ngx_cycle->log, ngx_socket_errno,
                     "lua fork child " ngx_close_socket_n
@@ -100,6 +98,14 @@ int ngx_http_lua_fork(char* name)
                     &ls[i].addr_text);
             }
         }
+
+        //ngx_close_listening_sockets(ngx_cycle);
+
+        ngx_close_idle_connections(ngx_cycle);
+
+        ngx_cycle->connection_n = 512;
+
+        ngx_use_accept_mutex = 0;
     }
 
     return pid;
