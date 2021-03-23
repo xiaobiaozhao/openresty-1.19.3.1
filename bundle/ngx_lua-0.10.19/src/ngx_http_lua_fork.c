@@ -27,6 +27,9 @@ int ngx_http_lua_fork(char* name)
     }
 
     if (pid == 0) {
+#if (NGX_LINUX)
+        prctl(PR_SET_PDEATHSIG,SIGKILL);
+#endif
 
 #if (NGX_HAVE_CPU_AFFINITY)
         /* reset the CPU affinity mask */

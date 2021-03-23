@@ -23,7 +23,9 @@ if
 end
 
 local _M = {version = base.version}
-
+local function sleep(sec)
+    os.execute("sleep " .. sec)
+end
 local function fork(name, fork_proc, ...)
     if "function" ~= type(fork_proc) then
         return -2, "fork_proc must function"
